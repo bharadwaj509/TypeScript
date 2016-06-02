@@ -834,6 +834,7 @@ namespace ts {
         }
 
         function writeModuleDeclaration(node: ModuleDeclaration) {
+            if (!node.body) { throw new Error("TODO"); } //TODO
             emitJsDocComments(node);
             emitModuleElementDeclarationFlags(node);
             if (isGlobalScopeAugmentation(node)) {
@@ -853,7 +854,7 @@ namespace ts {
                     writeTextOfNode(currentText, node.name);
                 }
             }
-            while (node.body.kind !== SyntaxKind.ModuleBlock) {
+            while (node.body && node.body.kind !== SyntaxKind.ModuleBlock) {
                 node = <ModuleDeclaration>node.body;
                 write(".");
                 writeTextOfNode(currentText, node.name);

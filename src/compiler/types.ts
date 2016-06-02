@@ -1301,7 +1301,7 @@ namespace ts {
     // @kind(SyntaxKind.ModuleDeclaration)
     export interface ModuleDeclaration extends DeclarationStatement {
         name: Identifier | LiteralExpression;
-        body: ModuleBlock | ModuleDeclaration;
+        body?: ModuleBlock | ModuleDeclaration;
     }
 
     // @kind(SyntaxKind.ModuleBlock)
@@ -2042,13 +2042,15 @@ namespace ts {
         SyntheticProperty       = 0x10000000,  // Property in union or intersection type
         Optional                = 0x20000000,  // Optional property
         ExportStar              = 0x40000000,  // Export * declaration
+        //todo: move up near module flags
+        ShorthandAmbientModule  = 0x80000000,
 
         Enum = RegularEnum | ConstEnum,
         Variable = FunctionScopedVariable | BlockScopedVariable,
         Value = Variable | Property | EnumMember | Function | Class | Enum | ValueModule | Method | GetAccessor | SetAccessor,
         Type = Class | Interface | Enum | TypeLiteral | ObjectLiteral | TypeParameter | TypeAlias,
         Namespace = ValueModule | NamespaceModule,
-        Module = ValueModule | NamespaceModule,
+        Module = ValueModule | NamespaceModule | ShorthandAmbientModule,
         Accessor = GetAccessor | SetAccessor,
 
         // Variables can be redeclared, but can not redeclare a block-scoped declaration with the

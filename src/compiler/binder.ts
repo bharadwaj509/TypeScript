@@ -53,7 +53,8 @@ namespace ts {
             return state;
         }
         else if (node.kind === SyntaxKind.ModuleDeclaration) {
-            return getModuleInstanceState((<ModuleDeclaration>node).body);
+            const body = (<ModuleDeclaration>node).body;
+            return body ? getModuleInstanceState(body) : ModuleInstanceState.NonInstantiated;
         }
         else {
             return ModuleInstanceState.Instantiated;
@@ -1256,7 +1257,7 @@ namespace ts {
 
         function hasExportDeclarations(node: ModuleDeclaration | SourceFile): boolean {
             const body = node.kind === SyntaxKind.SourceFile ? node : (<ModuleDeclaration>node).body;
-            if (body.kind === SyntaxKind.SourceFile || body.kind === SyntaxKind.ModuleBlock) {
+            if (body && (body.kind === SyntaxKind.SourceFile || body.kind === SyntaxKind.ModuleBlock)) {
                 for (const stat of (<Block>body).statements) {
                     if (stat.kind === SyntaxKind.ExportDeclaration || stat.kind === SyntaxKind.ExportAssignment) {
                         return true;
@@ -1277,6 +1278,7 @@ namespace ts {
             }
         }
 
+        //THIS IS RELEVANT
         function bindModuleDeclaration(node: ModuleDeclaration) {
             setExportContextFlag(node);
             if (isAmbientModule(node)) {
@@ -1287,7 +1289,12 @@ namespace ts {
                     declareSymbolAndAddToSymbolTable(node, SymbolFlags.NamespaceModule, SymbolFlags.NamespaceModuleExcludes);
                 }
                 else {
-                    declareSymbolAndAddToSymbolTable(node, SymbolFlags.ValueModule, SymbolFlags.ValueModuleExcludes);
+                    let flags = SymbolFlags.ValueModule;
+                    if (!node.body) {
+                        //TODO: excludes?
+                        flags = flags | SymbolFlags.ShorthandAmbientModule;
+                    }
+                    declareSymbolAndAddToSymbolTable(node, flags, SymbolFlags.ValueModuleExcludes);
                 }
             }
             else {

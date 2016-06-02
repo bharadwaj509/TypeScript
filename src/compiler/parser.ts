@@ -5330,7 +5330,10 @@ namespace ts {
             else {
                 node.name = parseLiteralNode(/*internName*/ true);
             }
-            node.body = parseModuleBlock();
+            //TODO: we should handle implicit newlines too!
+            if (!tryParse(() => parseOptional(SyntaxKind.SemicolonToken))) {
+                node.body = parseModuleBlock();
+            }
             return finishNode(node);
         }
 
