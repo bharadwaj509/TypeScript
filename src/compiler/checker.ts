@@ -987,7 +987,9 @@ namespace ts {
             const moduleSymbol = resolveExternalModuleName(node, (<ImportDeclaration>node.parent).moduleSpecifier);
 
             if (moduleSymbol) {
-                const exportDefaultSymbol = moduleSymbol.exports["export="] ?
+                const exportDefaultSymbol = isShorthandAmbientModuleSymbol(moduleSymbol) ?
+                    moduleSymbol :
+                    moduleSymbol.exports["export="] ?
                     getPropertyOfType(getTypeOfSymbol(moduleSymbol.exports["export="]), "default") :
                     resolveSymbol(moduleSymbol.exports["default"]);
 
@@ -1038,8 +1040,9 @@ namespace ts {
         }
 
         function getExportOfModule(symbol: Symbol, name: string): Symbol {
-            if (symbol.flags & SymbolFlags.Module) {  
-                if (symbol.flags & SymbolFlags.ShorthandAmbientModule) {
+            if (symbol.flags & SymbolFlags.Module) {
+                const m = <ModuleDeclaration>symbol.valueDeclaration;
+                if (isShorthandAmbientModule(m)) {
                     return symbol;
                 }
             
@@ -1048,6 +1051,15 @@ namespace ts {
                     return resolveSymbol(exports[name]);
                 }
             }
+        }
+        
+        //move
+        function isShorthandAmbientModuleSymbol(symbol: Symbol): boolean {
+            const module = symbol.valueDeclaration;
+            return module.kind === SyntaxKind.ModuleDeclaration && isShorthandAmbientModule(<ModuleDeclaration>module);
+        }
+        function isShorthandAmbientModule(module: ModuleDeclaration): boolean {
+            return !module.body;
         }
 
         function getPropertyOfVariable(symbol: Symbol, name: string): Symbol {
@@ -1065,7 +1077,7 @@ namespace ts {
             if (targetSymbol) {
                 const name = specifier.propertyName || specifier.name;
                 if (name.text) {
-                    if (moduleSymbol && SymbolFlags.ShorthandAmbientModule) {
+                    if (isShorthandAmbientModule(<ModuleDeclaration>moduleSymbol.valueDeclaration)) {
                         return moduleSymbol;
                     }
                     
@@ -3229,9 +3241,14 @@ namespace ts {
         function getTypeOfFuncClassEnumModule(symbol: Symbol): Type {
             const links = getSymbolLinks(symbol);
             if (!links.type) {
-                const type = createObjectType(TypeFlags.Anonymous, symbol);
-                links.type = strictNullChecks && symbol.flags & SymbolFlags.Optional ?
-                    addNullableKind(type, TypeFlags.Undefined) : type;
+                if (symbol.valueDeclaration.kind === SyntaxKind.ModuleDeclaration && isShorthandAmbientModule(<ModuleDeclaration>symbol.valueDeclaration)) {
+                    links.type = anyType;
+                }
+                else {
+                    const type = createObjectType(TypeFlags.Anonymous, symbol);
+                    links.type = strictNullChecks && symbol.flags & SymbolFlags.Optional ?
+                        addNullableKind(type, TypeFlags.Undefined) : type;
+                }
             }
             return links.type;
         }

@@ -1278,7 +1278,6 @@ namespace ts {
             }
         }
 
-        //THIS IS RELEVANT
         function bindModuleDeclaration(node: ModuleDeclaration) {
             setExportContextFlag(node);
             if (isAmbientModule(node)) {
@@ -1289,12 +1288,7 @@ namespace ts {
                     declareSymbolAndAddToSymbolTable(node, SymbolFlags.NamespaceModule, SymbolFlags.NamespaceModuleExcludes);
                 }
                 else {
-                    let flags = SymbolFlags.ValueModule;
-                    if (!node.body) {
-                        //TODO: excludes?
-                        flags = flags | SymbolFlags.ShorthandAmbientModule;
-                    }
-                    declareSymbolAndAddToSymbolTable(node, flags, SymbolFlags.ValueModuleExcludes);
+                    declareSymbolAndAddToSymbolTable(node, SymbolFlags.ValueModule, SymbolFlags.ValueModuleExcludes);
                 }
             }
             else {
